@@ -20,8 +20,8 @@ costs[0]=costs[0]*costmult[0];
 progress[0]++;
 incomes[0]+=multipliers[1];
 if(progress[0]==8) {
-multipliers[0]++;
-incomes[0] = incomes[0]*multipliers[0]/(multipliers[0]-1);
+multipliers[0]*=1.5;
+incomes[0] = incomes[0]*1.5;
 progress[0]=0;
 }
 update("coinbox",coins);
@@ -38,9 +38,9 @@ costs[n-1]=costs[n-1]*costmult[n-1];
 progress[n-1]++;
 incomes[n-1]+=multipliers[n-1];
 if(progress[n-1]==8) {
-multipliers[n-1]++;
+multipliers[n-1]*=1.5;
 progress[n-1]=0;
-incomes[n-1] = incomes[n-1]*multipliers[n-1]/(multipliers[n-1]-1);
+incomes[n-1] = incomes[n-1]*1.5;
 }
 update("coinbox",coins);
 update("i"+(n-1),incomes[n-1]);
