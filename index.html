@@ -91,8 +91,8 @@ function step() {
 	for(i=1;i<=8;i++) update("m"+i,format(game.multipliers[i-1]));
 	for(i=1;i<=8;i++) update("p"+i,format(game.progress[i-1]));
 	getprestige()
-	update("prestmult",format(getprestige()))
-	if(game.prestigecount>0||getprestige()>=2) document.getElementById("pbutton").style.display = "inline-block";
+	update("prestmult",format(getprestige()/game.boost))
+	if(getprestige()/game.boost>=1) document.getElementById("pbutton").style.display = "inline-block";
 }
 function save() {
 	localStorage.setItem('save',btoa(JSON.stringify(game)))
