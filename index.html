@@ -162,6 +162,7 @@ function load(save) {
 	for(i=1;i<=8;i++) update("m"+i,format(game.multipliers[i-1]));
 	for(i=1;i<=8;i++) update("p"+i,format(game.progress[i-1]));
 	update("prestmult",getprestige())
+if (game.notations==undefined) game.notations=0
 }
 function exportGame() {
 	var savefile=btoa(JSON.stringify(game))
