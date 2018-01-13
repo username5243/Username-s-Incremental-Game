@@ -71,7 +71,8 @@ function prestige() {
 		notation:game.notation
 	}
 	showElement("prestigeInfo")
-	update("prestigeBoost",forat(game.boost))
+	update("prestigeBoost",format(game.boost))
+	hideElement("prestigeButton")
 }
 function hardReset() {
 	if(confirm("Are you sure you want to hard reset? This will erase all your progress.")) {
