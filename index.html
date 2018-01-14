@@ -235,8 +235,8 @@ function load(save) {
 		game.multipliers[i] = new Decimal(game.multipliers[i])
 		game.amounts[i] = new Decimal(game.amounts[i])
 		game.costs[i] = new Decimal(game.costs[i])
+		game.incomes[i] = new Decimal(game.incomes[i]);
 	}
-	for(let i=0;i<=6;i++) game.incomes[i] = new Decimal(game.incomes[i]);
 	game.coins = new Decimal(game.coins)
 	game.totalCoins = new Decimal(game.totalCoins)
 	game.boost = new Decimal(game.boost)
