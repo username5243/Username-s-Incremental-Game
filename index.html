@@ -222,16 +222,6 @@ function save() {
 }
 function load(save) {
 	game=JSON.parse(atob(save))
-	update("coinbox",format(game.coins));
-	update("incomebox",format(game.incomes[0]));
-	for(let i=1;i<=8;i++) {
-		update("a"+i,format(game.amounts[i-1]));
-		update("c"+i,format(game.costs[i-1]));
-		update("m"+i,format(game.multipliers[i-1]));
-		update("p"+i,format(game.progress[i-1]));
-	}
-	for(let i=1;i<=7;i++) update("i"+i,format(game.incomes[i]));
-	update("prestmult",getprestige())
 	
 	if (game.notations===undefined) game.notations=0
 	if (game.time===undefined) game.time=new Date().getTime();
@@ -250,6 +240,17 @@ function load(save) {
 	game.coins = new Decimal(game.coins)
 	game.totalCoins = new Decimal(game.totalCoins)
 	game.boost = new Decimal(game.boost)
+	
+	update("coinbox",format(game.coins));
+	update("incomebox",format(game.incomes[0]));
+	for(let i=1;i<=8;i++) {
+		update("a"+i,format(game.amounts[i-1]));
+		update("c"+i,format(game.costs[i-1]));
+		update("m"+i,format(game.multipliers[i-1]));
+		update("p"+i,format(game.progress[i-1]));
+	}
+	for(let i=1;i<=7;i++) update("i"+i,format(game.incomes[i]));
+	update("prestmult",getprestige())
 }
 function exportGame() {
 	var savefile=btoa(JSON.stringify(game))
