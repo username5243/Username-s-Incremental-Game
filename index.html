@@ -135,7 +135,7 @@ function buy(n) {
 	}
 }
 function step() {
-	const s = (game.time - new Date().getTime())/1000
+	const s = (new Date().getTime()-game.time)/1000
 	game.time = new Date().getTime()
 	
 	for(i=7;i>=0;i--) game.amounts[i-1]+=game.incomes[i]*s;
