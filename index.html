@@ -41,7 +41,7 @@ function displayTime(s) {
 }
 function format(a) {
 	a = new Decimal(a)
-	if (a.e < 4) return a.toFixed(0)
+	if (a.lte(9999.5)) return a.toFixed(0)
 	if (game.notation==1) return a.toExponential(3).replace("e+","e")
 	if (game.notation==3) return "e"+Math.round(1000*a.log10())/1000;
 	var m = a.mantissaWithDecimalPlaces(3)
