@@ -12,7 +12,8 @@ var game = {
 	totalCoins:0,
 	prestigeCount:0,
 	boost:1,
-	notation:0
+	notation:0,
+	time:new Date().getTime()
 }
 function abbreviate(i) {
 	var units = ["","U","Du","T","Q","Qi","S","Sp","O","N"]
@@ -68,7 +69,8 @@ function prestige() {
 		progress:[0,0,0,0,0,0,0,0],
 		prestigecount:game.prestigecount+1,
 		boost:getprestige(),
-		notation:game.notation
+		notation:game.notation,
+		time:game.time
 	}
 	showElement("prestigeInfo")
 	update("prestigeBoost",format(game.boost))
@@ -86,7 +88,8 @@ function hardReset() {
 			progress:[0,0,0,0,0,0,0,0],
 			prestigecount:0,
 			boost:1,
-			notation:game.notation
+			notation:game.notation,
+			time:game.time
 		}
 	hideelement("prestigeInfo")
 	}
@@ -132,9 +135,12 @@ function buy(n) {
 	}
 }
 function step() {
-	for(i=7;i>=0;i--) game.amounts[i-1]+=game.incomes[i];
-	game.coins+=game.incomes[0];
-	game.totalCoins+=game.incomes[0];
+	const s = (game.time - new Date().getTime())/1000
+	game.time = new Date.getTime()
+	
+	for(i=7;i>=0;i--) game.amounts[i-1]+=game.incomes[i]*s;
+	game.coins+=game.incomes[0]*s;
+	game.totalCoins+=game.incomes[0]*s;
 	for(i=1;i<=8;i++) game.incomes[i-1]=game.amounts[i-1]*game.multipliers[i-1];
 	update("coinbox",format(game.coins));
 	update("incomebox",format(game.incomes[0]));
@@ -168,7 +174,8 @@ function load(save) {
 	for(i=1;i<=8;i++) update("m"+i,format(game.multipliers[i-1]));
 	for(i=1;i<=8;i++) update("p"+i,format(game.progress[i-1]));
 	update("prestmult",getprestige())
-if (game.notations===undefined) game.notations=0
+	if (game.notations===undefined) game.notations=0
+	if (game.time===undefined) game.time=new Date().getTime()
 }
 function exportGame() {
 	var savefile=btoa(JSON.stringify(game))
@@ -181,7 +188,7 @@ function importGame() {
 }
 function init() {
 if(localStorage.getItem('save')!=null) load(localStorage.getItem('save'));
-setInterval(step,1000)
+setInterval(step,100)
 setInterval(save,10000)
 }
 var tab="generators"
