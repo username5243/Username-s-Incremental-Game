@@ -13,7 +13,9 @@ var game = {
 	prestigeCount:0,
 	boost:1,
 	notation:0,
-	time:new Date().getTime()
+	time:new Date().getTime(),
+	upgradeCoins:0,
+	upgrades:[]
 }
 function abbreviate(i) {
 	var units = ["","U","Du","T","Q","Qi","S","Sp","O","N"]
@@ -40,9 +42,11 @@ function format(a) {
 	var exponent2 = 3*Math.floor(exponent/3);
 	var mantissa2 = Math.round(1000*mantissa*Math.pow(10,exponent-exponent2))/1000;
 	var index = exponent2/3;
+	var log = Math.round(1000*Math.log10(a))/1000;
 	if(game.notation==0) return mantissa2+abbreviate(index-1)
 	if(game.notation==1) return mantissa+"e"+exponent
 	if(game.notation==2) return mantissa2+"e"+exponent2
+	if(game.notation==3) return "e"+log
 }
 function update(set,get){
 	document.getElementById(set).innerHTML=get
@@ -58,6 +62,9 @@ function getprestige() {
 	for(var i=0;i<=7;i++) product*=Math.pow(game.amounts[i],0.025)
 	return product/100
 }
+function getUC() {
+	return Math.floor(Math.pow(game.coins/1e63,0.03))
+}
 function prestige() {
 	game = {
 		coins:1,
@@ -70,11 +77,33 @@ function prestige() {
 		prestigecount:game.prestigecount+1,
 		boost:getprestige(),
 		notation:game.notation,
-		time:game.time
+		time:game.time,
+		totalCoins:game.totalCoins,
+		upgradeCoins:game.upgradeCoins,
+		upgrades:game.upgrades
 	}
 	showElement("prestigeInfo")
 	update("prestigeBoost",format(game.boost))
 	hideElement("prestigeButton")
+}
+function upgrade() {
+	game = {
+		coins:1,
+		incomes:[0,0,0,0,0,0,0,0],
+		costs:[1,100,1e4,1e7,1e10,1e14,1e18,1e23],
+		costmult:[2,3,4,6,10,15,25,40],
+		amounts:[0,0,0,0,0,0,0,0],
+		multipliers:[1,1,1,1,1,1,1,1],
+		progress:[0,0,0,0,0,0,0,0],
+		prestigecount:0,
+		boost:getprestige(),
+		notation:game.notation,
+		time:game.time,
+		totalCoins:game.totalCoins,
+		upgradeCoins:game.upgradeCoins+getUC(),
+		upgrades:game.upgrades
+	}
+	hideElement("UCButton")
 }
 function hardReset() {
 	if(confirm("Are you sure you want to hard reset? This will erase all your progress.")) {
@@ -89,9 +118,13 @@ function hardReset() {
 			prestigecount:0,
 			boost:1,
 			notation:game.notation,
-			time:game.time
+			time:new Date().getTime(),
+			totalCoins:game.totalCoins,
+			upgradeCoins:0,
+			upgrades:[]
 		}
-	hideelement("prestigeInfo")
+	hideElement("prestigeInfo")
+	hideElement("UCButton")
 	}
 }
 function buy(n) {
@@ -137,9 +170,8 @@ function buy(n) {
 function step() {
 	const s = (new Date().getTime()-game.time)/1000
 	game.time = new Date().getTime()
-	
 	for(i=7;i>=0;i--) game.amounts[i-1]+=game.incomes[i]*s;
-	game.coins+=game.incomes[0]*s;
+ 	game.coins+=game.incomes[0]*s;
 	game.totalCoins+=game.incomes[0]*s;
 	for(i=1;i<=8;i++) game.incomes[i-1]=game.amounts[i-1]*game.multipliers[i-1];
 	update("coinbox",format(game.coins));
@@ -154,9 +186,11 @@ function step() {
 	if(game.boost>1) showElement("prestigeInfo");
 	update("prestigeBoost",format(game.boost));
 	if(getprestige()/game.boost>=1) document.getElementById("prestigeButton").style.display = "inline-block";
+	if(game.coins>=1e63) showElement(UCButton);
+	update("UCAmount",getUC());
 }
 function switchNotation() {
-	var notationArray = ["Standard","Scientific","Engineering"]
+	var notationArray = ["Standard","Scientific","Engineering","Logarithm"]
 	game.notation++;
 	if(game.notation>notationArray.length-1) game.notation=0;
 	update("notationID",notationArray[game.notation]);
@@ -175,13 +209,15 @@ function load(save) {
 	for(i=1;i<=8;i++) update("p"+i,format(game.progress[i-1]));
 	update("prestmult",getprestige())
 	if (game.notations===undefined) game.notations=0
-	if (game.time===undefined) game.time=new Date().getTime()
+	if (game.time===undefined) game.time=new Date().getTime();
+	if (game.upgradeCoins===undefined) game.upgradeCoins=0
+	if (game.upgrades===undefined) game.upgrades=[]
 }
 function exportGame() {
 	var savefile=btoa(JSON.stringify(game))
 	showElement("exportInfo")
 	document.getElementById("exportSave").value=btoa(JSON.stringify(game))
-}
+}	
 function importGame() {
 	var input=prompt('Paste in your exported save and press enter.')
 	load(input)
@@ -216,6 +252,7 @@ You are getting<span id="incomebox">0</span> coins per second.
 <button onclick="buy(8)" id="b8">Level 8 x<span id="m8">1</span><br>Cost: <span id="c8">1e23</span><br>Amount: <span id="a8">0</span> [<span id="p8">0</span>]</button>
 <div id="prestigeInfo" style="display:none">You have x<span id="prestigeBoost">1</span> boost for all production from prestige.</div>
 <button onclick="prestige()" id="prestigeButton" style="display:none">Reset the game to get a production increase. x<span id="prestmult">1.000</span></button>
+<button id="UCButton" onclick="upgrade()">Transform your coins into upgrade coins to make the game faster. +<span id="UCAmount">0</span> UC</button>
 </div>
 <div id="options" style="display:none">
 <button onclick="save()">Save</button>
