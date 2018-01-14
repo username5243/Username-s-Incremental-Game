@@ -41,7 +41,7 @@ function displayTime(s) {
 }
 function format(a) {
 	a = new Decimal(a)
-	if (a.lte(9999.5)) return a.toFixed(0)
+	if (a.lte(9999.5)) return a.toFixed(3)
 	if (game.notation==1) return a.toExponential(3).replace("e+","e")
 	if (game.notation==3) return "e"+Math.round(1000*a.log10())/1000;
 	var m = a.mantissaWithDecimalPlaces(3)
@@ -197,7 +197,7 @@ function step() {
 		update("a"+i,format(game.amounts[i-1]));
 		update("c"+i,format(game.costs[i-1]));
 		update("m"+i,format(game.multipliers[i-1]));
-		update("p"+i,format(game.progress[i-1]));
+		update("p"+i,game.progress[i-1]);
 	}
 	for(let i=1;i<=7;i++) update("i"+i,format(game.incomes[i]));
 	update("totalCoinDisplay",format(game.totalCoins));
