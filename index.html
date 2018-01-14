@@ -31,6 +31,12 @@ function abbreviate(i) {
 	var hundred = hundreds[i3%10];
 	return unit+ten+hundred;
 }
+function displayTime(s) {
+	if (s < 10) return format(s*1000) + " milliseconds."
+	if (s < 60) return format(s) + " seconds."
+	if (s < 3600) return Math.floor(s/60) + " minutes, " + format(s%60) + " seconds."
+	return Math.floor(s/3600) + " hours, " + Math.floor((s/60)%60) + " minutes, " + format(s%60) + " seconds."
+}
 function format(a) {
 	if(a < 10000) return Math.round(1000*a)/1000;
 	var exponent = Math.floor(Math.log10(a));
@@ -186,7 +192,7 @@ function step() {
 	for(i=1;i<=8;i++) update("m"+i,format(game.multipliers[i-1]));
 	for(i=1;i<=8;i++) update("p"+i,format(game.progress[i-1]));
 	update("totalCoinDisplay",format(game.totalCoins));
-	update("playTime",format(game.timePlayed));
+	update("playTime",displayTime(game.timePlayed));
 	update("prestigeTimes",game.prestigecount);
 	getprestige()
 	update("prestmult",format(getprestige()/game.boost))
@@ -273,7 +279,7 @@ You are getting<span id="incomebox">0</span> coins per second.
 </div>
 <div id="stats" style="display:none">
 You have made a total of <span id="totalCoinDisplay">0</span> coins.<br>
-You have played for <span id="playTime">0</span> seconds.<br>
+You have played for <span id="playTime">0 seconds.</span><br>
 You have prestiged <span id="prestigeTimes">0</span> times.
 </div>
 <a href="https://discord.gg/ax4C3em">Discord</a>
