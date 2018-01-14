@@ -20,14 +20,14 @@ var game = {
 	achievements:[]
 }
 function abbreviate(i) {
+	if(i==0) return "K";
+	if(i==1) return "M";
+	if(i==2) return "B";
 	var units = ["","U","Du","T","Q","Qi","S","Sp","O","N"]
 	var tens = ["","D","V","Tg","Qg","Qig","Sg","SPg","Og","Ng"]
 	var hundreds = ["","C","Dc","Tc","Qc","Qic","Sc","Spc","Oc","Nc"]
 	var i2=Math.floor(i/10);
 	var i3=Math.floor(i2/10);
-	if(i==0) return "K";
-	if(i==1) return "M";
-	if(i==2) return "B";
 	var unit = units[i%10];
 	var ten = tens[i2%10];
 	var hundred = hundreds[i3%10];
@@ -41,8 +41,8 @@ function displayTime(s) {
 }
 function format(a) {
 	a = new Decimal(a)
-	if (a.e < 4) return a.toFixed(3)
-	if (game.notation==1) return a.toExponential(3)
+	if (a.e < 4) return a.toFixed(0)
+	if (game.notation==1) return a.toExponential(3).replace("e+","e")
 	if (game.notation==3) return "e"+Math.round(1000*a.log10())/1000;
 	var m = a.mantissaWithDecimalPlaces(3)
 	var e = a.e;
