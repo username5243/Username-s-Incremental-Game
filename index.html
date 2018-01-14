@@ -15,7 +15,8 @@ var game = {
 	notation:0,
 	time:new Date().getTime(),
 	upgradeCoins:0,
-	upgrades:[]
+	upgrades:[],
+	achievements:[]
 }
 function abbreviate(i) {
 	var units = ["","U","Du","T","Q","Qi","S","Sp","O","N"]
@@ -63,6 +64,10 @@ function showElement(elementID) {
 function hideElement(elementID) {
 	document.getElementById(elementID).style.display="none"
 }
+function getAch(ach) {
+	if (game.achievements.includes(ach)) return false;
+	game.achievements.push(ach)
+}
 function getprestige() {
 	product = 1;
 	for(var i=0;i<=7;i++) product*=Math.pow(game.amounts[i],0.025)
@@ -84,10 +89,11 @@ function prestige() {
 		boost:getprestige(),
 		notation:game.notation,
 		time:game.time,
-	timePlayed:game.timePlayed,
+		timePlayed:game.timePlayed,
 		totalCoins:game.totalCoins,
 		upgradeCoins:game.upgradeCoins,
-		upgrades:game.upgrades
+		upgrades:game.upgrades,
+		achievements:game.achievements
 	}
 	showElement("prestigeInfo")
 	update("prestigeBoost",format(game.boost))
@@ -103,13 +109,14 @@ function upgrade() {
 		multipliers:[1,1,1,1,1,1,1,1],
 		progress:[0,0,0,0,0,0,0,0],
 		prestigecount:0,
-		boost:getprestige(),
+		boost:1,
 		notation:game.notation,
 		time:game.time,
-	timePlayed:gme.timePlayed,
+		timePlayed:game.timePlayed,
 		totalCoins:game.totalCoins,
 		upgradeCoins:game.upgradeCoins+getUC(),
-		upgrades:game.upgrades
+		upgrades:game.upgrades,
+		achievements:game.achievements
 	}
 	hideElement("UCButton")
 }
@@ -127,10 +134,11 @@ function hardReset() {
 			boost:1,
 			notation:game.notation,
 			time:new Date().getTime(),
-	timePlayed:0,
+			timePlayed:0,
 			totalCoins:0,
 			upgradeCoins:0,
-			upgrades:[]
+			upgrades:[],
+			achievements:[]
 		}
 	hideElement("prestigeInfo")
 	hideElement("UCButton")
@@ -199,7 +207,7 @@ function step() {
 	if(game.boost>1) showElement("prestigeInfo");
 	update("prestigeBoost",format(game.boost));
 	if(getprestige()/game.boost>=1) document.getElementById("prestigeButton").style.display = "inline-block";
-	if(game.coins>=1e63) showElement(UCButton);
+	if(game.coins>=1e63) showElement("UCButton");
 	update("UCAmount",getUC());
 }
 function switchNotation() {
@@ -226,6 +234,7 @@ function load(save) {
 	if (game.timePlayed===undefined) game.timePlayed=0;
 	if (game.upgradeCoins===undefined) game.upgradeCoins=0
 	if (game.upgrades===undefined) game.upgrades=[]
+	if (game.achievements===undefined) game.achievements=[];
 }
 function exportGame() {
 	var savefile=btoa(JSON.stringify(game))
