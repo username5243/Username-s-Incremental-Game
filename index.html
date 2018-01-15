@@ -146,6 +146,7 @@ function hardReset() {
 			achievements:[]
 		}
 	hideElement("prestigeInfo")
+	hideElement("prestigeButton")
 	hideElement("UCButton")
 	hideElement('upgradesButton')
 	}
@@ -311,10 +312,10 @@ function switchTab(tabName) {
 <body onload="init()">
 You have <b id="coinbox">1</b> coins.<br>
 You are getting <b id="incomebox">0</b> coins per second.<br>
-<button onclick="switchTab('generators')">Generators</button>
-<button onclick="switchTab('options')">Options</button>
-<button onclick="switchTab('stats')">Statistics</button>
-<button id='upgradesButton' onclick="switchTab('upgrades')">Upgrades</button>
+<button id="generatorsButton" onclick="switchTab('generators')">Generators</button>
+<button id="optionsButton" onclick="switchTab('options')">Options</button>
+<button id="statsButton" onclick="switchTab('stats')">Statistics</button>
+<button id="upgradesButton" onclick="switchTab('upgrades')" style="display:none">Upgrades</button>
 <br>
 <div id="generators" style="display:inline-block">
 <button onclick="buy(1)" id="b1">Level 1 x<span id="m1">1</span><br>Cost: <span id="c1">1</span><br>Amount: <span id="a1">0</span> [<span id="p1">0</span>]<br>Income: <span id="i1">0</span></button>
