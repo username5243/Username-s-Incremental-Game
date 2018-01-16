@@ -122,8 +122,11 @@ function upgrade() {
 		upgrades:game.upgrades,
 		achievements:game.achievements
 	}
+	hideElement("prestigeInfo")
+	hideElement("prestigeButton")
 	hideElement("UCButton")
 	showElement('upgradesButton')
+	update("UCBox",game.upgradeCoins)
 }
 function hardReset() {
 	if(confirm("Are you sure you want to hard reset? This will erase all your progress.")) {
@@ -217,6 +220,8 @@ function step() {
 	if(getprestige().div(game.boost).gte(1)) document.getElementById("prestigeButton").style.display = "inline-block"
 	if(game.coins.gte(1e63)) showElement("UCButton")
 	update("UCAmount",getUC())
+	if(game.upgradeCoins>=0) showElement("upgradesButton")
+	update("UCBox",game.upgradeCoins)
 }
 function switchNotation() {
 	game.notation++
@@ -344,6 +349,7 @@ You have played for <span id="playTime">0 seconds.</span><br>
 You have prestiged <span id="prestigeTimes">0</span> times.
 </div>
 <div id="upgrades" style="display:none">
+You have <span id="UCBox">0</span> upgrade coins.
 <button onclick="buyUpgrade(1)">Upgrade<br>Cost: 1</button>
 </div>
 <a style='position:fixed;bottom:0' href="https://discord.gg/ax4C3em">Discord</a>
