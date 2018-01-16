@@ -163,8 +163,11 @@ function buy(n) {
 		game.progress[0]++
 		game.incomes[0] = game.incomes[0].add(game.multipliers[0])
 		if(game.progress[0]==8) {
-			game.multipliers[0] = game.multipliers[0].mul(1.5)
-			game.incomes[0] = game.incomes[0].mul(1.5)
+			var eightGenMultiplier = 1.5;
+			if(game.upgrades.includes(1)) eightGenMultiplier = 1.535;
+eightGenMultiplier
+			game.multipliers[0] = game.multipliers[0].mul(eightGenMultiplier)
+			game.incomes[0] = game.incomes[0].mul(eightGenMultiplier)
 			game.progress[0]=0
 		}
 		update("coinbox",format(game.coins))
@@ -181,9 +184,11 @@ function buy(n) {
 		game.progress[n-1]++
 		game.incomes[n-1] = game.incomes[n-1].add(game.multipliers[n-1])
 		if(game.progress[n-1]==8) {
-			game.multipliers[n-1] = game.multipliers[n-1].mul(1.5)
+			var eightGenMultiplier = 1.5;
+			if(game.upgrades.includes(1)) eightGenMultiplier = 1.535;
+			game.multipliers[n-1] = game.multipliers[n-1].mul(eightGenMultiplier)
 			game.progress[n-1]=0
-			game.incomes[n-1] = game.incomes[n-1].mul(1.5)
+			game.incomes[n-1] = game.incomes[n-1].mul(eightGenMultiplier)
 		}
 		update("coinbox",format(game.coins))
 		update("i"+(n-1),format(game.incomes[n-1]))
@@ -192,6 +197,13 @@ function buy(n) {
 		update("m"+n,format(game.multipliers[n-1]))
 		update("p"+n,game.progress[n-1])
 	}
+}
+function buyUpgrade(n) {
+	if(game.upgrades.includes(n)) return 0; // already have this upgrade
+	var upgradeCosts = [1];
+	game.upgradeCoins-=upgradeCosts[n-1]
+	game.upgrades.push(n);
+	update("UCBox",game.upgradeCoins)
 }
 function step() {
 	const s = (new Date().getTime()-game.time)/1000
@@ -350,7 +362,7 @@ You have prestiged <span id="prestigeTimes">0</span> times.
 </div>
 <div id="upgrades" style="display:none">
 You have <span id="UCBox">0</span> upgrade coins.
-<button onclick="buyUpgrade(1)">Upgrade<br>Cost: 1</button>
+<button onclick="buyUpgrade(1)">Multiplier for 8 generators 1.5x -> 1.535x<br>Cost: 1 UC</button>
 </div>
 <a style='position:fixed;bottom:0' href="https://discord.gg/ax4C3em">Discord</a>
 </body>
