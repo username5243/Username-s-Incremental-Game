@@ -201,6 +201,7 @@ eightGenMultiplier
 function buyUpgrade(n) {
 	if(game.upgrades.includes(n)) return 0; // already have this upgrade
 	var upgradeCosts = [1];
+	if(upgradeCosts[n-1]<game.upgradeCoins) return 0; // can't afford this upgrade
 	game.upgradeCoins-=upgradeCosts[n-1]
 	game.upgrades.push(n);
 	update("UCBox",game.upgradeCoins)
