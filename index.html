@@ -200,7 +200,7 @@ eightGenMultiplier
 }
 function buyUpgrade(n) {
 	if(game.upgrades.includes(n)) return 0; // already have this upgrade
-	var upgradeCosts = [1];
+	var upgradeCosts = [1,2];
 	if(upgradeCosts[n-1]<game.upgradeCoins) return 0; // can't afford this upgrade
 	game.upgradeCoins-=upgradeCosts[n-1]
 	game.upgrades.push(n);
@@ -210,8 +210,8 @@ function step() {
 	const s = (new Date().getTime()-game.time)/1000
 	game.time = new Date().getTime()
 	game.timePlayed+=s
-	for(let i=7;i>=1;i--) game.amounts[i-1] = game.amounts[i-1].add(game.incomes[i].mul(s))
- 	game.coins = game.coins.add(game.incomes[0].mul(s))
+	for(let i=7;i>=1;i--) game.amounts[i-1] = game.amounts[i-1].add(game.incomes[i].mul(player.upgrades.includes(2)?Math.pow(1+game.timePlayed/3600,0.215338279):1).mul(s))
+ 	game.coins = game.coins.add(game.incomes[0].mul(player.upgrades.includes(2)?Math.pow(1+game.timePlayed/3600,0.215338279):1).mul(s))
 	game.totalCoins = game.totalCoins.add(game.incomes[0].mul(s))
 	for(let i=1;i<=8;i++) game.incomes[i-1] = game.amounts[i-1].mul(game.multipliers[i-1])
 	update("coinbox",format(game.coins))
@@ -364,6 +364,7 @@ You have prestiged <span id="prestigeTimes">0</span> times.
 <div id="upgrades" style="display:none">
 You have <span id="UCBox">0</span> upgrade coins.
 <button onclick="buyUpgrade(1)">Multiplier for 8 generators 1.5x -> 1.535x<br>Cost: 1 UC</button>
+<button onclick="buyUpgrade(2)">Production increase over time<br>Cost: 2 UC</button>
 </div>
 <a style='position:fixed;bottom:0' href="https://discord.gg/ax4C3em">Discord</a>
 </body>
