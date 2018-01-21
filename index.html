@@ -155,51 +155,33 @@ function hardReset() {
 	}
 }
 function buy(n) {
-	if(n==1) {
-		if(game.costs[0].gt(game.coins)) return 0
-		game.coins = game.coins.sub(game.costs[0])
-		game.amounts[0] = game.amounts[0].add(1)
-		game.costs[0]=game.costs[0].mul(game.costmult[0])
-		game.progress[0]++
-		game.incomes[0] = game.incomes[0].add(game.multipliers[0])
-		if(game.progress[0]==8) {
-			game.multipliers[0] = game.multipliers[0].mul(eightGenMultiplier())
-			game.incomes[0] = game.incomes[0].mul(eightGenMultiplier())
-			game.progress[0]=0
-		}
-		update("coinbox",format(game.coins))
-		update("incomebox",format(game.incomes[0]))
-		update("c1",format(game.costs[0]))
-		update("a1",format(game.amounts[0]))
-		update("m1",format(game.multipliers[0]))
-		update("p1",game.progress[0])
-	}else{
+	if (reset) {
+		if (game.coins.lt(Decimal.sumGeometricSeries(8-game.progress[n-1],game.costs[n-1],game.costmult[n-1],0))) return 0;
+		game.coins = game.coins.sub(Decimal.sumGeometricSeries(8-game.progress[n-1],game.costs[n-1],game.costmult[n-1],0))
+		game.amounts[n-1] = game.amounts[n-1].add(8-game.progress[n-1])
+		game.costs[n-1]= game.costs[n-1].mul(Math.pow(game.costmult[n-1],8-game.progress[n-1]))
+		game.incomes[n-1] = game.incomes[n-1].add(game.multipliers[n-1].mul(8-game.progress[n-1]))
+		game.progress[n-1] = 8
+	} else {
 		if(game.costs[n-1].gt(game.coins)) return 0
 		game.coins = game.coins.sub(game.costs[n-1])
 		game.amounts[n-1] = game.amounts[n-1].add(1)
 		game.costs[n-1]= game.costs[n-1].mul(game.costmult[n-1])
-		game.progress[n-1]++
 		game.incomes[n-1] = game.incomes[n-1].add(game.multipliers[n-1])
-		if(game.progress[n-1]==8) {
-			game.multipliers[n-1] = game.multipliers[n-1].mul(game.upgrades.includes(1)?1.325:1.3)
-			game.progress[n-1]=0
-			game.incomes[n-1] = game.incomes[n-1].mul(game.upgrades.includes(1)?1.325:1.3)
-		}
-		update("coinbox",format(game.coins))
-		update("i"+(n-1),format(game.incomes[n-1]))
-		update("c"+n,format(game.costs[n-1]))
-		update("a"+n,format(game.amounts[n-1]))
-		update("m"+n,format(game.multipliers[n-1]))
-		update("p"+n,game.progress[n-1])
+		game.progress[n-1]++
+	}
+	if(game.progress[n-1]==8) {
+		game.multipliers[n-1] = game.multipliers[n-1].mul(game.upgrades.includes(1)?1.325:1.3)
+		game.progress[n-1]=0
+		game.incomes[n-1] = game.incomes[n-1].mul(game.upgrades.includes(1)?1.325:1.3)
 	}
 }
+const upgradeCosts = [1,1];
 function buyUpgrade(n) {
 	if(game.upgrades.includes(n)) return 0; // already have this upgrade
-	var upgradeCosts = [1,1];
 	if(upgradeCosts[n-1]<game.upgradeCoins) return 0; // can't afford this upgrade
 	game.upgradeCoins-=upgradeCosts[n-1]
 	game.upgrades.push(n);
-	update("UCBox",game.upgradeCoins)
 }
 function mult(tier) {
     let m = new Decimal(1)
@@ -218,7 +200,8 @@ function step() {
 	update("incomebox",format(game.incomes[0]))
 	for(let i=1;i<=8;i++) {
 		update("a"+i,format(game.amounts[i-1]))
-		update("c"+i,format(game.costs[i-1]))
+		if (shift) update("c"+i,format(Decimal.sumGeometricSeries(8-game.progress[i-1],game.costs[i-1],game.costmult[i-1],0)))
+		else update("c"+i,format(game.costs[i-1]));
 		update("m"+i,format(game.multipliers[i-1]))
 		update("p"+i,game.progress[i-1])
 	}
@@ -325,6 +308,18 @@ function switchTab(tabName) {
 	showElement(tabName)
 	tab=tabName
 }
+let shift = false;
+window.addEventListener('keydown', function(event) {
+    if (event.keyCode == 16) {
+        shift = true;
+    }
+}, false);
+
+window.addEventListener('keyup', function(event) {
+    if (event.keyCode == 16) {
+        shift = false;
+    }
+}, false);
 </script>
 <title>Username's Incremental game</title>
 </head>
