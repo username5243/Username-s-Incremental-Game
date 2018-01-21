@@ -237,7 +237,7 @@ function step() {
 	if(getprestige().gte(game.boost)) document.getElementById("prestigeButton").style.display = "inline-block"
 	if(game.coins.gte(1e63)) showElement("UCButton")
 	update("UCAmount",getUC())
-	if(game.upgradeCoins>=0) showElement("upgradesButton")
+	if(game.upgradeCoins>0) showElement("upgradesButton")
 	update("UCBox",game.upgradeCoins)
     update("upgrade2",format(Math.cbrt(1+game.timePlayed/3600)))
 }
