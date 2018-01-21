@@ -154,10 +154,6 @@ function hardReset() {
 	hideElement('upgradesButton')
 	}
 }
-function eightGenMultiplier() {
-    if(game.upgrades.includes(1)) return 1.535;
-    return 1.5
-}
 function buy(n) {
 	if(n==1) {
 		if(game.costs[0].gt(game.coins)) return 0
@@ -185,9 +181,9 @@ function buy(n) {
 		game.progress[n-1]++
 		game.incomes[n-1] = game.incomes[n-1].add(game.multipliers[n-1])
 		if(game.progress[n-1]==8) {
-			game.multipliers[n-1] = game.multipliers[n-1].mul(eightGenMultiplier())
+			game.multipliers[n-1] = game.multipliers[n-1].mul(game.upgrades.includes(1)?1.325:1.3)
 			game.progress[n-1]=0
-			game.incomes[n-1] = game.incomes[n-1].mul(eightGenMultiplier())
+			game.incomes[n-1] = game.incomes[n-1].mul(game.upgrades.includes(1)?1.325:1.3)
 		}
 		update("coinbox",format(game.coins))
 		update("i"+(n-1),format(game.incomes[n-1]))
