@@ -39,7 +39,8 @@ function displayTime(s) {
 	if (s < 10) return Math.floor(s*1000) + " milliseconds."
 	if (s < 60) return Math.floor(s*100)/100 + " seconds."
 	if (s < 3600) return Math.floor(s/60) + " minutes, " + Math.floor(s)%60 + " seconds."
-	return format(Math.floor(s/3600)) + " hours, " + Math.floor(s/60)%60 + " minutes, " + Math.floor(s)%60 + " seconds."
+	if(s < 86400) return format(Math.floor(s/3600)) + " hours, " + Math.floor(s/60)%60 + " minutes, " + Math.floor(s)%60 + " seconds."
+	return format(Math.floor(s/86400)) + " days, " + Math.floor(s/3600)%24 + " hours, " + Math.floor(s/60)%60 + " minutes, " + Math.floor(s)%60 + " seconds."
 }
 function format(a) {
 	a = new Decimal(a)
