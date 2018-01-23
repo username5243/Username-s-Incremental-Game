@@ -212,7 +212,7 @@ function buy(n) {
 }
 function buyUpgrade(n) {
 	if(game.upgrades.includes(n)) return 0; // already have this upgrade
-	var upgradeCosts = [1,1,1,1,1];
+	var upgradeCosts = [1,1,1,2,3];
 	if(game.upgradeCoins.lt(upgradeCosts[n-1])) return 0; // can't afford this upgrade
 	game.upgradeCoins=game.upgradeCoins.sub(upgradeCosts[n-1])
 	game.upgrades.push(n);
