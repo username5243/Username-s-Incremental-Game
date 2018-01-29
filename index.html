@@ -227,8 +227,8 @@ function buyUpgrade(n) {
 function mult(tier) {
     let m = new Decimal(1)
     if (game.upgrades.includes(2)) m = m.mul(Math.cbrt(1+game.timePlayed/3600))
-    if (game.upgrades.includes(3)) m = m.mul(Math.sqrt(1+game.upgradeTime/600))
-    if (game.upgrades.includes(5)) m = m.mul(game.upgradeCoins.add(1))
+    if (game.upgrades.includes(3)) m = m.mul(Math.sqrt(1+game.upgradeTime/60))
+    if (game.upgrades.includes(5)) m = m.mul(game.upgradeCoins.add(1).pow(2))
     return m
 }
 function step() {
@@ -262,8 +262,8 @@ function step() {
 	if(game.upgradeCoins>0) showElement("upgradesButton")
 	update("UCBox",game.upgradeCoins)
     update("upgrade2",format(Math.cbrt(1+game.timePlayed/3600)))
-    update("upgrade3",format(Math.sqrt(1+game.upgradeTime/600)))
-    update("upgrade5",format(game.upgradeCoins.add(1)))
+    update("upgrade3",format(Math.sqrt(1+game.upgradeTime/60)))
+    update("upgrade5",format(game.upgradeCoins.add(1).pow(2)))
 }
 function switchNotation() {
 	game.notation++
