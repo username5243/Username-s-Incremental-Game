@@ -85,7 +85,7 @@ function getAch(ach) {
 function getprestige() {
 	var product = new Decimal(0.01)
 	for(var i=0;i<=7;i++) product = product.mul(game.amounts[i].pow(0.025))
-    if (game.upgrades.includes(4)) product = product.mul(Math.max(product.log10()*0.3,0)*0.2)
+    if (game.upgrades.includes(4)) product = product.mul(Math.max(product.log10()*0.3,1)*0.2)
 	return product
 }
 function getUC() {
