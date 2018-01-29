@@ -1,5 +1,11 @@
 <html>
 <head>
+<style>
+	.shopButton {
+		width:160px;
+		height:64px;
+	}
+</style>
 <script type="text/javascript" src="breakinfinity.js"></script>
 <script>
 var game = {
@@ -15,9 +21,14 @@ var game = {
 	boost:new Decimal(1),
 	notation:0,
 	time:new Date().getTime(),
+	timePlayed:0,
+	upgradeCount:0,
+	upgradeTime:0,
 	upgradeCoins:new Decimal(0),
 	upgrades:[],
-	achievements:[]
+	achievements:[],
+	version:1,
+	build:1
 }
 var notationArray = ["Standard","Scientific","Engineering","Logarithm"]
 
@@ -39,7 +50,7 @@ function displayTime(s) {
 	if (s < 10) return Math.floor(s*1000) + " milliseconds."
 	if (s < 60) return Math.floor(s*100)/100 + " seconds."
 	if (s < 3600) return Math.floor(s/60) + " minutes, " + Math.floor(s)%60 + " seconds."
-	if(s < 86400) return format(Math.floor(s/3600)) + " hours, " + Math.floor(s/60)%60 + " minutes, " + Math.floor(s)%60 + " seconds."
+	if (s < 86400) return Math.floor(s/3600) + " hours, " + Math.floor(s/60)%60 + " minutes, " + Math.floor(s)%60 + " seconds."
 	return format(Math.floor(s/86400)) + " days, " + Math.floor(s/3600)%24 + " hours, " + Math.floor(s/60)%60 + " minutes, " + Math.floor(s)%60 + " seconds."
 }
 function format(a) {
@@ -74,6 +85,7 @@ function getAch(ach) {
 function getprestige() {
 	var product = new Decimal(0.01)
 	for(var i=0;i<=7;i++) product = product.mul(game.amounts[i].pow(0.025))
+    if (game.upgrades.includes(4)) product = product.mul(Math.max(product.log10()*0.3,1)*0.2)
 	return product
 }
 function getUC() {
@@ -91,13 +103,16 @@ function prestige() {
 		prestigeCount:game.prestigeCount+1,
 		boost:getprestige(),
 		upgradeCount:game.upgradeCount,
+		upgradeTime:game.upgradeTime,
 		notation:game.notation,
 		time:game.time,
 		timePlayed:game.timePlayed,
 		totalCoins:game.totalCoins,
 		upgradeCoins:game.upgradeCoins,
 		upgrades:game.upgrades,
-		achievements:game.achievements
+		achievements:game.achievements,
+		version:game.version,
+		build:game.build
 	}
 	showElement("prestigeInfo")
 	update("prestigeBoost",format(game.boost))
@@ -115,13 +130,16 @@ function upgrade() {
 		prestigeCount:0,
 		boost:new Decimal(1),
 		upgradeCount:game.upgradeCount+1,
+		upgradeTime:0,
 		notation:game.notation,
 		time:game.time,
 		timePlayed:game.timePlayed,
 		totalCoins:game.totalCoins,
 		upgradeCoins:game.upgradeCoins.add(getUC()),
 		upgrades:game.upgrades,
-		achievements:game.achievements
+		achievements:game.achievements,
+		version:game.version,
+		build:game.build
 	}
 	hideElement("prestigeInfo")
 	hideElement("prestigeButton")
@@ -142,13 +160,17 @@ function hardReset() {
 			totalCoins:new Decimal(0),
 			prestigeCount:0,
 			boost:new Decimal(1),
-			upgradeCount:game.upgradeCount,
 			notation:0,
 			time:new Date().getTime(),
+			upgradeCount:0,
+			upgradeTime:0,
 			upgradeCoins:new Decimal(0),
 			upgrades:[],
-			achievements:[]
+			achievements:[],
+			version:game.version,
+			build:game.build
 		}
+	localStorage.clear('save')
 	hideElement("prestigeInfo")
 	hideElement("prestigeButton")
 	hideElement("UCButton")
@@ -196,27 +218,30 @@ function buy(n) {
 }
 function buyUpgrade(n) {
 	if(game.upgrades.includes(n)) return 0; // already have this upgrade
-	var upgradeCosts = [1,1];
-	if(upgradeCosts[n-1]<game.upgradeCoins) return 0; // can't afford this upgrade
-	game.upgradeCoins-=upgradeCosts[n-1]
+	var upgradeCosts = [1,1,1,1,2,3];
+	if(game.upgradeCoins.lt(upgradeCosts[n-1])) return 0; // can't afford this upgrade
+	game.upgradeCoins=game.upgradeCoins.sub(upgradeCosts[n-1])
 	game.upgrades.push(n);
 	update("UCBox",game.upgradeCoins)
 }
 function mult(tier) {
     let m = new Decimal(1)
     if (game.upgrades.includes(2)) m = m.mul(Math.cbrt(1+game.timePlayed/3600))
+    if (game.upgrades.includes(3)) m = m.mul(Math.sqrt(1+game.upgradeTime/60))
+    if (game.upgrades.includes(5)) m = m.mul(game.upgradeCoins.add(1).pow(2))
     return m
 }
 function step() {
 	const s = (new Date().getTime()-game.time)/1000
 	game.time = new Date().getTime()
 	game.timePlayed+=s
+	game.upgradeTime+=s
 	for(let i=7;i>=1;i--) game.amounts[i-1] = game.amounts[i-1].add(game.incomes[i].mul(mult(i+1)).mul(s))
 	game.coins = game.coins.add(game.incomes[0].mul(mult(1)).mul(s))
  	game.totalCoins = game.totalCoins.add(game.incomes[0].mul(mult(1)).mul(s))
 	for(let i=1;i<=8;i++) game.incomes[i-1] = game.amounts[i-1].mul(game.multipliers[i-1])
 	update("coinbox",format(game.coins))
-	update("incomebox",format(game.incomes[0]))
+	update("incomebox",format(game.incomes[0].mul(mult(1))))
 	for(let i=1;i<=8;i++) {
 		update("a"+i,format(game.amounts[i-1]))
 		update("c"+i,format(game.costs[i-1]))
@@ -231,12 +256,14 @@ function step() {
 	update("prestmult",format(getprestige().div(game.boost)))
 	if(game.boost.gt(1)) showElement("prestigeInfo")
 	update("prestigeBoost",format(game.boost))
-	if(getprestige().gte(game.boost)) document.getElementById("prestigeButton").style.display = "inline-block"
+	if(getprestige().gte(game.boost)) showElement("prestigeButton")
 	if(game.coins.gte(1e63)) showElement("UCButton")
 	update("UCAmount",getUC())
 	if(game.upgradeCoins>0) showElement("upgradesButton")
 	update("UCBox",game.upgradeCoins)
     update("upgrade2",format(Math.cbrt(1+game.timePlayed/3600)))
+    update("upgrade3",format(Math.sqrt(1+game.upgradeTime/60)))
+    update("upgrade5",format(game.upgradeCoins.add(1).pow(2)))
 }
 function switchNotation() {
 	game.notation++
@@ -258,6 +285,13 @@ function load(save) {
 		else game.upgradeCoins = new Decimal(game.upgradeCoins)
 		if (game.upgrades===undefined) game.upgrades=[]
 		if (game.achievements===undefined) game.achievements=[]
+		if (game.upgradeTime==undefined) game.upgradeTime=game.time
+		game.version=1
+		game.build=1
+		/*if (game.build<2) {
+			(update code)
+		}
+		*/
 		
 		for(let i=0;i<=7;i++) {
 			game.multipliers[i] = new Decimal(game.multipliers[i])
@@ -338,14 +372,14 @@ You are getting <b id="incomebox">0</b> coins per second.<br>
 <button id="upgradesButton" onclick="switchTab('upgrades')" style="display:none">Upgrades</button>
 <br>
 <div id="generators" style="display:inline-block">
-<button onclick="buy(1)" id="b1">Level 1 x<span id="m1">1</span><br>Cost: <span id="c1">1</span><br>Amount: <span id="a1">0</span> [<span id="p1">0</span>]<br>Income: <span id="i1">0</span></button>
-<button onclick="buy(2)" id="b2">Level 2 x<span id="m2">1</span><br>Cost: <span id="c2">100</span><br>Amount: <span id="a2">0</span> [<span id="p2">0</span>]<br>Income: <span id="i2">0</span></button>
-<button onclick="buy(3)" id="b3">Level 3 x<span id="m3">1</span><br>Cost: <span id="c3">1e4</span><br>Amount: <span id="a3">0</span> [<span id="p3">0</span>]<br>Income: <span id="i3">0</span></button>
-<button onclick="buy(4)" id="b4">Level 4 x<span id="m4">1</span><br>Cost: <span id="c4">1e7</span><br>Amount: <span id="a4">0</span> [<span id="p4">0</span>]<br>Income: <span id="i4">0</span></button>
-<button onclick="buy(5)" id="b5">Level 5 x<span id="m5">1</span><br>Cost: <span id="c5">1e10</span><br>Amount: <span id="a5">0</span> [<span id="p5">0</span>]<br>Income: <span id="i5">0</span></button>
-<button onclick="buy(6)" id="b6">Level 6 x<span id="m6">1</span><br>Cost: <span id="c6">1e14</span><br>Amount: <span id="a6">0</span> [<span id="p6">0</span>]<br>Income: <span id="i6">0</span></button>
-<button onclick="buy(7)" id="b7">Level 7 x<span id="m7">1</span><br>Cost: <span id="c7">1e18</span><br>Amount: <span id="a7">0</span> [<span id="p7">0</span>]<br>Income: <span id="i7">0</span></button>
-<button onclick="buy(8)" id="b8">Level 8 x<span id="m8">1</span><br>Cost: <span id="c8">1e23</span><br>Amount: <span id="a8">0</span> [<span id="p8">0</span>]</button>
+<button class='shopButton' onclick="buy(1)" id="b1">Level 1 x<span id="m1">1</span><br>Cost: <span id="c1">1</span><br>Amount: <span id="a1">0</span> [<span id="p1">0</span>]<br>Income: <span id="i1">0</span></button>
+<button class='shopButton' onclick="buy(2)" id="b2">Level 2 x<span id="m2">1</span><br>Cost: <span id="c2">100</span><br>Amount: <span id="a2">0</span> [<span id="p2">0</span>]<br>Income: <span id="i2">0</span></button>
+<button class='shopButton' onclick="buy(3)" id="b3">Level 3 x<span id="m3">1</span><br>Cost: <span id="c3">1e4</span><br>Amount: <span id="a3">0</span> [<span id="p3">0</span>]<br>Income: <span id="i3">0</span></button>
+<button class='shopButton' onclick="buy(4)" id="b4">Level 4 x<span id="m4">1</span><br>Cost: <span id="c4">1e7</span><br>Amount: <span id="a4">0</span> [<span id="p4">0</span>]<br>Income: <span id="i4">0</span></button>
+<button class='shopButton' onclick="buy(5)" id="b5">Level 5 x<span id="m5">1</span><br>Cost: <span id="c5">1e10</span><br>Amount: <span id="a5">0</span> [<span id="p5">0</span>]<br>Income: <span id="i5">0</span></button>
+<button class='shopButton' onclick="buy(6)" id="b6">Level 6 x<span id="m6">1</span><br>Cost: <span id="c6">1e14</span><br>Amount: <span id="a6">0</span> [<span id="p6">0</span>]<br>Income: <span id="i6">0</span></button>
+<button class='shopButton' onclick="buy(7)" id="b7">Level 7 x<span id="m7">1</span><br>Cost: <span id="c7">1e18</span><br>Amount: <span id="a7">0</span> [<span id="p7">0</span>]<br>Income: <span id="i7">0</span></button>
+<button class='shopButton' onclick="buy(8)" id="b8">Level 8 x<span id="m8">1</span><br>Cost: <span id="c8">1e23</span><br>Amount: <span id="a8">0</span> [<span id="p8">0</span>]</button>
 <br><div id="prestigeInfo" style="display:none">You have x<span id="prestigeBoost">1</span> boost for all production from prestige.</div>
 <br><button onclick="prestige()" id="prestigeButton" style="display:none">Reset the game to get a production increase. x<span id="prestmult">1.000</span></button>
 <button id="UCButton" onclick="upgrade()" style="display:none">Transform your coins into upgrade coins to make the game faster. +<span id="UCAmount">0</span> UC</button>
@@ -367,7 +401,10 @@ You have prestiged <span id="prestigeTimes">0</span> times.
 You have <span id="UCBox">0</span> upgrade coins.
 <button onclick="buyUpgrade(1)">Multiplier for 8 generators 1.5x -> 1.535x<br>Cost: 1 UC</button>
 <button onclick="buyUpgrade(2)">Production increase over time<br>Currently: x<span id="upgrade2">1</span>.<br>Cost: 1 UC</button>
+<button onclick="buyUpgrade(3)">Production increase over time since last upgrade<br>Currently: x<span id="upgrade3">1</span>.<br>Cost: 1 UC</button>
+<button onclick="buyUpgrade(4)">Makes the prestige formula better<br>Cost: 1 UC</button>
+<button onclick="buyUpgrade(5)">Production increase over unspent UCs<br>Currently: x<span id="upgrade5">1</span>.<br>Cost: 1 UC</button>
 </div>
-<a style='position:fixed;bottom:0' href="https://discord.gg/ax4C3em">Discord</a>
+<a style='position:fixed;left:0;bottom:0' href="https://discord.gg/ax4C3em">Discord</a>
 </body>
 </html>
