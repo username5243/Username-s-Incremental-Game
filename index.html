@@ -28,7 +28,7 @@ var game = {
 	upgrades:[],
 	achievements:[],
 	version:1,
-	build:1
+	build:2
 }
 var notationArray = ["Standard","Scientific","Engineering","Logarithm"]
 
@@ -85,7 +85,7 @@ function getAch(ach) {
 function getprestige() {
 	var product = new Decimal(0.01)
 	for(var i=0;i<=7;i++) product = product.mul(game.amounts[i].pow(0.025))
-    if (game.upgrades.includes(4)) product = product.mul(Math.max(product.log10()*0.3,1)*0.2)
+    if (game.upgrades.includes(4)) product = product.mul((product.add(1).log10()+1)*0.3)
 	return product
 }
 function getUC() {
@@ -114,9 +114,6 @@ function prestige() {
 		version:game.version,
 		build:game.build
 	}
-	showElement("prestigeInfo")
-	update("prestigeBoost",format(game.boost))
-	hideElement("prestigeButton")
 }
 function upgrade() {
 	game = {
@@ -141,11 +138,6 @@ function upgrade() {
 		version:game.version,
 		build:game.build
 	}
-	hideElement("prestigeInfo")
-	hideElement("prestigeButton")
-	hideElement("UCButton")
-	showElement('upgradesButton')
-	update("UCBox",game.upgradeCoins)
 }
 function hardReset() {
 	if(confirm("Are you sure you want to hard reset? This will erase all your progress.")) {
@@ -170,11 +162,7 @@ function hardReset() {
 			version:game.version,
 			build:game.build
 		}
-	localStorage.clear('save')
-	hideElement("prestigeInfo")
-	hideElement("prestigeButton")
-	hideElement("UCButton")
-	hideElement('upgradesButton')
+		localStorage.clear('save')
 	}
 }
 function buy(n) {
@@ -226,9 +214,9 @@ function buyUpgrade(n) {
 }
 function mult(tier) {
     let m = new Decimal(1)
-    if (game.upgrades.includes(2)) m = m.mul(Math.cbrt(1+game.timePlayed/3600))
-    if (game.upgrades.includes(3)) m = m.mul(Math.sqrt(1+game.upgradeTime/60))
-    if (game.upgrades.includes(5)) m = m.mul(game.upgradeCoins.add(1).pow(2))
+    if (game.upgrades.includes(2)) m = m.mul(Math.pow(1+game.timePlayed/1000,0.2))
+    if (game.upgrades.includes(3)) m = m.mul(Math.pow(1+game.upgradeTime/300,0.3))
+    if (game.upgrades.includes(5)) m = m.mul(game.upgradeCoins.add(1).pow(0.75))
     return m
 }
 function step() {
@@ -252,18 +240,22 @@ function step() {
 	update("totalCoinDisplay",format(game.totalCoins))
 	update("playTime",displayTime(game.timePlayed))
 	update("prestigeTimes",game.prestigeCount)
-	getprestige()
 	update("prestmult",format(getprestige().div(game.boost)))
 	if(game.boost.gt(1)) showElement("prestigeInfo")
+	else hideElement("prestigeInfo")
 	update("prestigeBoost",format(game.boost))
 	if(getprestige().gte(game.boost)) showElement("prestigeButton")
+	else hideElement("prestigeButton")
+	
+	if (game.upgradeCount>0||game.upgradeCoins.gt(0)||game.upgrades.length>0) showElement('upgradesButton')
+	else hideElement('upgradesButton')
 	if(game.coins.gte(1e63)) showElement("UCButton")
-	update("UCAmount",getUC())
-	if(game.upgradeCoins>0||game.upgrades.length>0) showElement("upgradesButton")
-	update("UCBox",game.upgradeCoins)
-    update("upgrade2",format(Math.cbrt(1+game.timePlayed/3600)))
-    update("upgrade3",format(Math.sqrt(1+game.upgradeTime/60)))
-    update("upgrade5",format(game.upgradeCoins.add(1).pow(2)))
+	else hideElement("UCButton")
+	update("UCAmount",format(getUC()))
+	update("UCBox",format(game.upgradeCoins))
+    update("upgrade2",format(Math.pow(1+game.timePlayed/1000,0.2)))
+    update("upgrade3",format(Math.pow(1+game.upgradeTime/300,0.3)))
+    update("upgrade5",format(game.upgradeCoins.add(1).pow(0.75)))
 }
 function switchNotation() {
 	game.notation++
@@ -275,52 +267,42 @@ function save() {
 }
 function load(save) {
 	try {
-		game=JSON.parse(atob(save))
+		save=JSON.parse(atob(save))
 		
-		if (game.notations===undefined) game.notations=0
-		if (game.time===undefined) game.time=new Date().getTime()
-		if (game.timePlayed===undefined) game.timePlayed=0
-		if (game.upgradeCount===undefined) game.upgradeCount=0
-		if (game.upgradeCoins===undefined) game.upgradeCoins=new Decimal(0)
-		else game.upgradeCoins = new Decimal(game.upgradeCoins)
-		if (game.upgrades===undefined) game.upgrades=[]
-		if (game.achievements===undefined) game.achievements=[]
-		if (game.upgradeTime==undefined) game.upgradeTime=game.timePlayed
-		game.version=1
-		game.build=1
-		/*if (game.build<2) {
+		if (save.notations===undefined) save.notations=0
+		if (save.time===undefined) save.time=new Date().getTime()
+		if (save.timePlayed===undefined) save.timePlayed=0
+		if (save.upgradeCount===undefined) save.upgradeCount=0
+		if (save.upgradeCoins===undefined) save.upgradeCoins=0
+		else save.upgradeCoins = new Decimal(save.upgradeCoins)
+		if (save.upgrades===undefined) save.upgrades=[]
+		if (save.achievements===undefined) save.achievements=[]
+		if (save.upgradeTime==undefined) save.upgradeTime=save.timePlayed
+		if (save.version==undefined) save.version=1
+		if (save.build==undefined) save.build=1
+		/*if (save.build<2) {
 			(update code)
 		}
 		*/
 		
 		for(let i=0;i<=7;i++) {
-			game.multipliers[i] = new Decimal(game.multipliers[i])
-			game.amounts[i] = new Decimal(game.amounts[i])
-			game.costs[i] = new Decimal(game.costs[i])
-			game.incomes[i] = new Decimal(game.incomes[i])
+			save.multipliers[i] = new Decimal(save.multipliers[i])
+			save.amounts[i] = new Decimal(save.amounts[i])
+			save.costs[i] = new Decimal(save.costs[i])
+			save.incomes[i] = new Decimal(save.incomes[i])
 		}
-		game.coins = new Decimal(game.coins)
-		game.totalCoins = new Decimal(game.totalCoins)
-		game.boost = new Decimal(game.boost)
+		save.coins = new Decimal(save.coins)
+		save.totalCoins = new Decimal(save.totalCoins)
+		save.boost = new Decimal(save.boost)
+		save.upgradeCoins = new Decimal(save.upgradeCoins)
 		
-		update("coinbox",format(game.coins))
-		update("incomebox",format(game.incomes[0]))
-		for(let i=1;i<=8;i++) {
-			update("a"+i,format(game.amounts[i-1]))
-			update("c"+i,format(game.costs[i-1]))
-			update("m"+i,format(game.multipliers[i-1]))
-			update("p"+i,format(game.progress[i-1]))
-		}
-		for(let i=1;i<=7;i++) update("i"+i,format(game.incomes[i]))
+		save.version=game.version
+		save.build=game.build
+		game=save
 		update("notationID",notationArray[game.notation])
-		update("prestmult",getprestige())
-		if (game.upgradeCount==0) {
-			showElement('upgradesButton')
-		} else {
-			hideElement('upgradesButton')
-		}
 	} catch (e) {
-		console.log('Your save failed to load: '+e)
+		console.log('Your save failed to load:')
+		console.error(e)
 	}
 }
 function exportGame() {
@@ -344,7 +326,8 @@ function init() {
 				try {
 					step()
 				} catch (e) {
-					console.log('A game error has been occured: '+e)
+					console.log('A game error has occured:')
+					throw e
 				}
 				tickspeed=tickspeed*0.8+(new Date().getTime()-time)*0.2
 				
