@@ -28,7 +28,7 @@ var game = {
 	upgrades:[],
 	achievements:[],
 	version:1,
-	build:2
+	build:3
 }
 var notationArray = ["Standard","Scientific","Engineering","Logarithm"]
 
@@ -224,12 +224,12 @@ function step() {
 	game.time = new Date().getTime()
 	game.timePlayed+=s
 	game.upgradeTime+=s
-	for(let i=7;i>=1;i--) game.amounts[i-1] = game.amounts[i-1].add(game.incomes[i].mul(mult(i+1)).mul(s))
-	game.coins = game.coins.add(game.incomes[0].mul(mult(1)).mul(s))
- 	game.totalCoins = game.totalCoins.add(game.incomes[0].mul(mult(1)).mul(s))
-	for(let i=1;i<=8;i++) game.incomes[i-1] = game.amounts[i-1].mul(game.multipliers[i-1])
+	for(let i=1;i<=8;i++) game.incomes[i-1] = game.amounts[i-1].mul(game.multipliers[i-1]).mul(mult(i))
+	for(let i=7;i>=1;i--) game.amounts[i-1] = game.amounts[i-1].add(game.incomes[i].mul(s))
+	game.coins = game.coins.add(game.incomes[0].mul(s))
+ 	game.totalCoins = game.totalCoins.add(game.incomes[0].mul(s))
 	update("coinbox",format(game.coins))
-	update("incomebox",format(game.incomes[0].mul(mult(1))))
+	update("incomebox",format(game.incomes[0]))
 	for(let i=1;i<=8;i++) {
 		update("a"+i,format(game.amounts[i-1]))
 		update("c"+i,format(game.costs[i-1]))
@@ -329,12 +329,12 @@ function init() {
 					console.log('A game error has occured:')
 					throw e
 				}
-				tickspeed=tickspeed*0.8+(new Date().getTime()-time)*0.2
+				tickspeed=Math.max(tickspeed*0.8+(new Date().getTime()-time)*0.2,50)
 				
 				updated=true
-			},tickspeed)
+			},tickspeed-50)
 		}
-	},0)
+	},50)
 	setInterval(save,10000)
 }
 var tab="generators"
