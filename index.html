@@ -214,8 +214,8 @@ function buyUpgrade(n) {
 }
 function mult(tier) {
     let m = new Decimal(1)
-    if (game.upgrades.includes(2)) m = m.mul(Math.pow(1+game.timePlayed/1000,0.2))
-    if (game.upgrades.includes(3)) m = m.mul(Math.pow(1+game.upgradeTime/300,0.3))
+    if (game.upgrades.includes(2)) m = m.mul(Math.log10(1+game.timePlayed/86400)/Math.log10(2)+1)
+    if (game.upgrades.includes(3)) m = m.mul(Math.log10(1+game.upgradeTime/86400)/Math.log10(1.5)+1)
     if (game.upgrades.includes(5)) m = m.mul(game.upgradeCoins.add(1).pow(0.75))
     return m
 }
@@ -253,8 +253,8 @@ function step() {
 	else hideElement("UCButton")
 	update("UCAmount",format(getUC()))
 	update("UCBox",format(game.upgradeCoins))
-    update("upgrade2",format(Math.pow(1+game.timePlayed/1000,0.2)))
-    update("upgrade3",format(Math.pow(1+game.upgradeTime/300,0.3)))
+    update("upgrade2",format(Math.log10(1+game.timePlayed/86400)/Math.log10(2)+1))
+    update("upgrade3",format(Math.log10(1+game.upgradeTime/86400)/Math.log10(1.5)+1))
     update("upgrade5",format(game.upgradeCoins.add(1).pow(0.75)))
 }
 function switchNotation() {
