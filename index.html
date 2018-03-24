@@ -31,7 +31,7 @@ var game = {
 	challengesCompleted:{},
 	achievements:[],
 	version:1,
-	build:4
+	build:5
 }
 var notationArray = ["Standard","Scientific","Engineering","Logarithm"]
 var challengeUnlocks = [1e100]
@@ -52,11 +52,11 @@ function abbreviate(i) {
 	return unit+ten+hundred
 }
 function displayTime(s) {
-	if (s < 10) return Math.floor(s*1000) + " milliseconds."
-	if (s < 60) return Math.floor(s*100)/100 + " seconds."
-	if (s < 3600) return Math.floor(s/60) + " minutes, " + Math.floor(s)%60 + " seconds."
-	if (s < 86400) return Math.floor(s/3600) + " hours, " + Math.floor(s/60)%60 + " minutes, " + Math.floor(s)%60 + " seconds."
-	return format(Math.floor(s/86400)) + " days, " + Math.floor(s/3600)%24 + " hours, " + Math.floor(s/60)%60 + " minutes, " + Math.floor(s)%60 + " seconds."
+	if (s < 10) return Math.floor(s*1000) + " milliseconds"
+	if (s < 60) return Math.floor(s*100)/100 + " seconds"
+	if (s < 3600) return Math.floor(s/60) + " minutes, " + Math.floor(s)%60 + " seconds"
+	if (s < 86400) return Math.floor(s/3600) + " hours, " + Math.floor(s/60)%60 + " minutes, " + Math.floor(s)%60 + " seconds"
+	return format(Math.floor(s/86400)) + " days, " + Math.floor(s/3600)%24 + " hours, " + Math.floor(s/60)%60 + " minutes, " + Math.floor(s)%60 + " seconds"
 }
 function format(a) {
 	a = new Decimal(a)
@@ -264,7 +264,15 @@ function step() {
 	update("totalCoinDisplay",format(game.totalCoins))
 	update("playTime",displayTime(game.timePlayed))
 	update("prestigeTimes",game.prestigeCount)
-	update("upgradeTimes",game.upgradeCount)
+	if (game.upgradeCount>0) {
+		showElement("upgradeTime")
+		showElement("upgradeTimes")
+		update("upgradeTime",'You upgraded '+displayTime(game.upgradeTime)+' ago.')
+		update("upgradeTimes",'You have upgraded '+game.upgradeCount+' times.')
+	} else {
+		hideElement("upgradeTime")
+		hideElement("upgradeTimes")
+	}
 	update("prestmult",format(getprestige().div(game.boost)))
 	if(game.boost.gt(1)) showElement("prestigeInfo")
 	else hideElement("prestigeInfo")
@@ -437,9 +445,10 @@ You are getting <b id="incomebox">0</b> coins per second.<br>
 </div>
 <div id="stats" style="display:none">
 You have made a total of <span id="totalCoinDisplay">0</span> coins.<br>
-You have played for <span id="playTime">0 seconds.</span><br>
+You have played for <span id="playTime">0 seconds</span>.<br>
 You have prestiged <span id="prestigeTimes">0</span> times.<br>
-You have upgraded <span id="upgradeTimes">0</span> times.
+<div id="upgradeTime">You upgraded 0 seconds ago.</div><br>
+<div id="upgradeTimes">You have upgraded 0 times.</div>
 </div>
 <div id="upgrades" style="display:none">
 You have <span id="UCBox">0</span> upgrade coins.
