@@ -26,11 +26,16 @@ var game = {
 	upgradeTime:0,
 	upgradeCoins:new Decimal(0),
 	upgrades:[],
+	challengesUnlocked:0,
+	currentChallenge:0,
+	challengesCompleted:{},
 	achievements:[],
 	version:1,
-	build:3
+	build:4
 }
 var notationArray = ["Standard","Scientific","Engineering","Logarithm"]
+var challengeUnlocks = [1e100]
+var challengeGoals = [1e63,1e63]
 
 function abbreviate(i) {
 	if(i==0) return "K"
@@ -110,12 +115,16 @@ function prestige() {
 		totalCoins:game.totalCoins,
 		upgradeCoins:game.upgradeCoins,
 		upgrades:game.upgrades,
+		challengesUnlocked:game.challengesUnlocked,
+		currentChallenge:game.currentChallenge,
+		challengesCompleted:game.challengesCompleted,
 		achievements:game.achievements,
 		version:game.version,
 		build:game.build
 	}
 }
-function upgrade() {
+function upgrade(challid=0) {
+	var cc=game.currentChallenge
 	game = {
 		coins:new Decimal(1),
 		incomes:[new Decimal(0),new Decimal(0),new Decimal(0),new Decimal(0),new Decimal(0),new Decimal(0),new Decimal(0),new Decimal(0)],
@@ -126,17 +135,24 @@ function upgrade() {
 		progress:[0,0,0,0,0,0,0,0],
 		prestigeCount:0,
 		boost:new Decimal(1),
-		upgradeCount:game.upgradeCount+1,
+		upgradeCount:(challid==0?game.upgradeCount+1:game.upgradeCount),
 		upgradeTime:0,
 		notation:game.notation,
 		time:game.time,
 		timePlayed:game.timePlayed,
 		totalCoins:game.totalCoins,
-		upgradeCoins:game.upgradeCoins.add(getUC()),
+		upgradeCoins:(challid==0?game.upgradeCoins.add(getUC()):game.upgradeCoins),
 		upgrades:game.upgrades,
+		challengesUnlocked:game.challengesUnlocked,
+		currentChallenge:(challid==-1?0:challid),
+		challengesCompleted:game.challengesCompleted,
 		achievements:game.achievements,
 		version:game.version,
 		build:game.build
+	}
+	if (challid==0&&cc>0) {
+		if (game.challengesCompleted[cc]==undefined) game.challengesCompleted[cc]=0
+		else game.challengesCompleted[cc]++
 	}
 }
 function hardReset() {
@@ -158,6 +174,9 @@ function hardReset() {
 			upgradeTime:0,
 			upgradeCoins:new Decimal(0),
 			upgrades:[],
+			challengesUnlocked:0,
+			currentChallenge:0,
+			challengesCompleted:{},
 			achievements:[],
 			version:game.version,
 			build:game.build
@@ -212,11 +231,15 @@ function buyUpgrade(n) {
 	game.upgrades.push(n);
 	update("UCBox",game.upgradeCoins)
 }
+function exitChallenge() {
+	if (game.currentChallenge>0) upgrade(-1)
+}
 function mult(tier) {
     let m = new Decimal(1)
-    if (game.upgrades.includes(2)) m = m.mul(Math.pow(1+game.timePlayed/1000,0.2))
-    if (game.upgrades.includes(3)) m = m.mul(Math.pow(1+game.upgradeTime/300,0.3))
+    if (game.upgrades.includes(2)) m = m.mul(Math.log10(1+game.timePlayed/86400)/Math.log10(2)+1)
+    if (game.upgrades.includes(3)) m = m.mul(Math.log10(1+game.upgradeTime/86400)/Math.log10(1.5)+1)
     if (game.upgrades.includes(5)) m = m.mul(game.upgradeCoins.add(1).pow(0.75))
+    if (game.upgrades.includes(6)) m = m.mul(Math.pow(game.coins.add(1).log10()/60+1,0.8))
     return m
 }
 function step() {
@@ -228,6 +251,7 @@ function step() {
 	for(let i=7;i>=1;i--) game.amounts[i-1] = game.amounts[i-1].add(game.incomes[i].mul(s))
 	game.coins = game.coins.add(game.incomes[0].mul(s))
  	game.totalCoins = game.totalCoins.add(game.incomes[0].mul(s))
+ 	while (game.challengesUnlocked<challengeUnlocks.length?game.coins.lt(challengeUnlocks[game.challengesUnlocked]):false) game.challengesUnlocked++
 	update("coinbox",format(game.coins))
 	update("incomebox",format(game.incomes[0]))
 	for(let i=1;i<=8;i++) {
@@ -240,6 +264,7 @@ function step() {
 	update("totalCoinDisplay",format(game.totalCoins))
 	update("playTime",displayTime(game.timePlayed))
 	update("prestigeTimes",game.prestigeCount)
+	update("upgradeTimes",game.upgradeCount)
 	update("prestmult",format(getprestige().div(game.boost)))
 	if(game.boost.gt(1)) showElement("prestigeInfo")
 	else hideElement("prestigeInfo")
@@ -247,15 +272,41 @@ function step() {
 	if(getprestige().gte(game.boost)) showElement("prestigeButton")
 	else hideElement("prestigeButton")
 	
-	if (game.upgradeCount>0||game.upgradeCoins.gt(0)||game.upgrades.length>0) showElement('upgradesButton')
-	else hideElement('upgradesButton')
-	if(game.coins.gte(1e63)) showElement("UCButton")
+	if (game.upgradeCount>0||game.upgradeCoins.gt(0)||game.upgrades.length>0) {
+		showElement('upgradesButton')
+		showElement('challengesButton')
+	} else { 
+		hideElement('upgradesButton')
+		hideElement('challengesButton')
+	}
+	if(game.coins.gte(challengeGoals[game.currentChallenge])) {
+		showElement("UCButton")
+		if (game.currentChallenge==0) update("UCButton",'Transform your coins into upgrade coins to make the game faster. '+format(getUC())+' UC')
+		else update("UCButton",'Complete this challenge and get a new upgrade.')
+	}
 	else hideElement("UCButton")
-	update("UCAmount",format(getUC()))
 	update("UCBox",format(game.upgradeCoins))
-    update("upgrade2",format(Math.pow(1+game.timePlayed/1000,0.2)))
-    update("upgrade3",format(Math.pow(1+game.upgradeTime/300,0.3)))
+    update("upgrade2",format(Math.log10(1+game.timePlayed/86400)/Math.log10(2)+1))
+    update("upgrade3",format(Math.log10(1+game.upgradeTime/86400)/Math.log10(1.5)+1))
     update("upgrade5",format(game.upgradeCoins.add(1).pow(0.75)))
+    update("upgrade6",format(Math.pow(game.coins.add(1).log10()/60+1,0.8)))
+	
+	if (game.challengesUnlocked<challengeUnlocks.length) {
+		showElement('nextChallenge')
+		update('nextChallenge','Next challenge unlocks at '+format(challengeUnlocks[game.challengesUnlocked])+' coins.')
+	} else {
+		hideElement('nextChallenge')
+	}
+	var id=1
+	while (document.getElementById('chall'+id)!=undefined) {
+		if (game.challengesUnlocked<id) {
+			hideElement('chall'+id)
+		} else {
+			showElement('chall'+id)
+			update('chall'+id,'(challenge description)<br>Goal: '+format(challengeGoals[id]))
+		}
+		id++
+	}
 }
 function switchNotation() {
 	game.notation++
@@ -280,6 +331,14 @@ function load(save) {
 		if (save.upgradeTime==undefined) save.upgradeTime=save.timePlayed
 		if (save.version==undefined) save.version=1
 		if (save.build==undefined) save.build=1
+		if (save.version<=1) {
+			if (save.version<1) save.build=0
+			if (save.build<4) {
+				save.challengesUnlocked=0
+				save.currentChallenge=0
+				save.challengesCompleted={}
+			}
+		}
 		/*if (save.build<2) {
 			(update code)
 		}
@@ -353,6 +412,7 @@ You are getting <b id="incomebox">0</b> coins per second.<br>
 <button id="optionsButton" onclick="switchTab('options')">Options</button>
 <button id="statsButton" onclick="switchTab('stats')">Statistics</button>
 <button id="upgradesButton" onclick="switchTab('upgrades')" style="display:none">Upgrades</button>
+<button id="challengesButton" onclick="switchTab('challenges')" style="display:none">Challenges</button>
 <br>
 <div id="generators" style="display:inline-block">
 <button class='shopButton' onclick="buy(1)" id="b1">Level 1 x<span id="m1">1</span><br>Cost: <span id="c1">1</span><br>Amount: <span id="a1">0</span> [<span id="p1">0</span>]<br>Income: <span id="i1">0</span></button>
@@ -365,7 +425,7 @@ You are getting <b id="incomebox">0</b> coins per second.<br>
 <button class='shopButton' onclick="buy(8)" id="b8">Level 8 x<span id="m8">1</span><br>Cost: <span id="c8">1e23</span><br>Amount: <span id="a8">0</span> [<span id="p8">0</span>]</button>
 <br><div id="prestigeInfo" style="display:none">You have x<span id="prestigeBoost">1</span> boost for all production from prestige.</div>
 <br><button onclick="prestige()" id="prestigeButton" style="display:none">Reset the game to get a production increase. x<span id="prestmult">1.000</span></button>
-<button id="UCButton" onclick="upgrade()" style="display:none">Transform your coins into upgrade coins to make the game faster. +<span id="UCAmount">0</span> UC</button>
+<button id="UCButton" onclick="upgrade()" style="display:none">Transform your coins into upgrade coins to make the game faster. +0 UC</button>
 </div>
 <div id="options" style="display:none">
 <button onclick="save()">Save</button>
@@ -378,7 +438,8 @@ You are getting <b id="incomebox">0</b> coins per second.<br>
 <div id="stats" style="display:none">
 You have made a total of <span id="totalCoinDisplay">0</span> coins.<br>
 You have played for <span id="playTime">0 seconds.</span><br>
-You have prestiged <span id="prestigeTimes">0</span> times.
+You have prestiged <span id="prestigeTimes">0</span> times.<br>
+You have upgraded <span id="upgradeTimes">0</span> times.
 </div>
 <div id="upgrades" style="display:none">
 You have <span id="UCBox">0</span> upgrade coins.
@@ -387,6 +448,12 @@ You have <span id="UCBox">0</span> upgrade coins.
 <button onclick="buyUpgrade(3)">Production increase over time since last upgrade<br>Currently: x<span id="upgrade3">1</span>.<br>Cost: 1 UC</button>
 <button onclick="buyUpgrade(4)">Makes the prestige formula better<br>Cost: 1 UC</button>
 <button onclick="buyUpgrade(5)">Production increase over unspent UCs<br>Currently: x<span id="upgrade5">1</span>.<br>Cost: 2 UC</button>
+<button onclick="buyUpgrade(6)">Production increase over total coins<br>Currently: x<span id="upgrade6">1</span>.<br>Cost: 3 UC</button>
+</div>
+<div id="challenges" style="display:none">
+<div id='nextChallenge'>Next challenge unlocks at X coins.</div><br>
+<button onclick="exitChallenge()">Exit challenge</button><br>
+<button id='chall1' onclick="upgrade(1)"></button>
 </div>
 <a style='position:fixed;left:0;bottom:0' href="https://discord.gg/ax4C3em">Discord</a>
 </body>	
