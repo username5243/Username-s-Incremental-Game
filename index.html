@@ -257,7 +257,7 @@ function step() {
 	for(let i=1;i<=8;i++) {
 		update("a"+i,format(game.amounts[i-1]))
 		update("c"+i,format(game.costs[i-1]))
-		update("m"+i,format(game.multipliers[i-1]))
+		update("m"+i,format(game.multipliers[i-1].mul(mult(i))))
 		update("p"+i,game.progress[i-1])
 	}
 	for(let i=1;i<=7;i++) update("i"+i,format(game.incomes[i]))
